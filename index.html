@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Umm — less umm, more wow</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0e0e0e;
+    --white: #f5f2ee;
+    --cream: #ede9e3;
+    --accent: #d45c2d;
+    --accent-light: #f0cabb;
+    --muted: #7a7570;
+    --border: #d8d3cc;
+    --card: #ffffff;
+    --r: 16px;
+    --rm: 10px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--white);
+    color: var(--black);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, .logo { font-family: 'Syne', sans-serif; }
+
+  /* AUTH SCREEN */
+  #authScreen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: var(--black);
+  }
+
+  .auth-box {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .logo {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--black);
+    margin-bottom: 4px;
+  }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .auth-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--cream);
+    border-radius: var(--rm);
+    padding: 4px;
+    margin-bottom: 1.5rem;
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .auth-tab.active {
+    background: var(--black);
+    color: var(--white);
+  }
+
+  .field {
+    margin-bottom: 1rem;
+  }
+
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .field input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--rm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    background: var(--white);
+    color: var(--black);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus { border-color: var(--black); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 13px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--rm);
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: opacity 0.2s;
+    margin-top: 0.5rem;
+  }
+
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .auth-error {
+    font-size: 13px;
+    color: #c0392b;
+    margin-top: 10px;
+    text-align: center;
+    min-height: 20px;
+  }
+
+  /* MAIN APP */
+  #appScreen { display: none; min-height: 100vh; }
+
+  .topbar {
+    background: var(--black);
+    padding: 0 2rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .topbar .logo { font-size: 1.4rem; color: var(--white); margin-bottom: 0; }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .nav-btn {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.1); color: white; }
+
+  .signout-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #aaa;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: all 0.2s;
+  }
+
+  .signout-btn:hover { border-color: rgba(255,255,255,0.5); color: white; }
+
+  .main-content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+  }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* TOPIC CARD */
+  .topic-card {
+    background: var(--black);
+    color: var(--white);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .topic-card::before {
+    content: '"';
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    font-family: 'Syne', sans-serif;
+    font-size: 120px;
+    color: rgba(255,255,255,0.06);
+    line-height: 1;
+  }
+
+  .topic-label {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-light);
+    margin-bottom: 10px;
+  }
+
+  .topic-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+
+  .topic-hint {
+    font-size: 13px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.6;
+  }
+
+  .new-topic-btn {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: rgba(255,255,255,0.7);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .new-topic-btn:hover { background: rgba(255,255,255,0.18); }
+
+  /* RECORDER */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .rec-center { text-align: center; }
+
+  .rec-btn {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: none;
+    background: #fde8e8;
+    color: #c0392b;
+    font-size: 30px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+    margin-bottom: 12px;
+  }
+
+  .rec-btn:hover { transform: scale(1.06); }
+
+  .rec-btn.recording {
+    background: #c0392b;
+    color: white;
+    animation: pulse 1.2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.3); }
+    50% { box-shadow: 0 0 0 14px rgba(192,57,43,0); }
+  }
+
+  .rec-timer {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+    min-height: 2.5rem;
+  }
+
+  .rec-status {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 100px;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: var(--rm);
+    padding: 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--black);
+    resize: vertical;
+    outline: none;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus { border-color: var(--black); }
+  textarea::placeholder { color: var(--muted); }
+
+  .btn-analyse {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--rm);
+    padding: 12px 24px;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .btn-analyse:hover { opacity: 0.88; }
+  .btn-analyse:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* STATS */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-box {
+    background: var(--cream);
+    border-radius: var(--rm);
+    padding: 14px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    display: block;
+  }
+
+  .stat-lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-top: 2px;
+    display: block;
+  }
+
+  /* FILLER HIGHLIGHT */
+  .transcript-display {
+    background: var(--cream);
+    border-radius: var(--rm);
+    padding: 16px;
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--black);
+  }
+
+  .filler {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-weight: 500;
+  }
+
+  /* FEEDBACK */
+  .feedback-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+    font-size: 14px;
+    line-height: 1.6;
+    align-items: flex-start;
+  }
+
+  .feedback-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .feedback-icon.good { background: #e6f9ee; }
+  .feedback-icon.warn { background: #fff4e5; }
+  .feedback-icon.tip { background: #e8f0ff; }
+
+  .score-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--black);
+    color: var(--white);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 1rem;
+  }
+
+  /* COMMUNITY FEED */
+  .feed-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .feed-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .feed-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--black);
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .feed-name { font-weight: 500; font-size: 14px; }
+  .feed-date { font-size: 12px; color: var(--muted); }
+
+  .feed-score {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .feed-topic {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .feed-transcript {
+    font-size: 13px;
+    color: #444;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .feed-summary {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+    font-style: italic;
+  }
+
+  /* LOADING */
+  .loading-dots {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: blink 1.1s infinite ease-in-out;
+  }
+
+  .dot:nth-child(2) { animation-delay: 0.18s; }
+  .dot:nth-child(3) { animation-delay: 0.36s; }
+
+  @keyframes blink {
+    0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  .notice {
+    background: #fff4e5;
+    color: #7a4f00;
+    border-radius: var(--rm);
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 14px;
+    display: none;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--muted);
+  }
+
+  .empty-state .big { font-size: 2.5rem; margin-bottom: 10px; }
+  .empty-state p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ AUTH SCREEN ═══════════════ -->
+<div id="authScreen">
+  <div class="auth-box">
+    <div class="logo">umm.</div>
+    <div class="tagline">less umm, more wow</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Log in</button>
+      <button class="auth-tab" onclick="switchTab('signup')">Sign up</button>
+    </div>
+
+    <div id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" />
+      </div>
+      <button class="btn-primary" onclick="login()">Log in</button>
+    </div>
+
+    <div id="signupForm" style="display:none">
+      <div class="field">
+        <label>Your name</label>
+        <input type="text" id="signupName" placeholder="Meg" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="signupEmail" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="signupPassword" placeholder="min. 6 characters" />
+      </div>
+      <button class="btn-primary" onclick="signup()">Create account</button>
+    </div>
+
+    <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ MAIN APP ═══════════════ -->
+<div id="appScreen">
+  <div class="topbar">
+    <div class="logo">umm.</div>
+    <div class="nav-links">
+      <button class="nav-btn active" onclick="showPage('practice')" id="navPractice">Practice</button>
+      <button class="nav-btn" onclick="showPage('community')" id="navCommunity">Community</button>
+      <button class="nav-btn" onclick="showPage('history')" id="navHistory">My history</button>
+      <button class="signout-btn" onclick="signOut()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+
+    <!-- PRACTICE PAGE -->
+    <div class="page active" id="pagePractice">
+
+      <div class="topic-card">
+        <div class="topic-label">📅 Today's topic</div>
+        <div class="topic-text" id="topicText">Loading...</div>
+        <div class="topic-hint" id="topicHint"></div>
+        <button class="new-topic-btn" onclick="newTopic()">↻ New topic</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎙 Your recording</div>
+        <div class="rec-center">
+          <div class="notice" id="micNotice"></div>
+          <div class="rec-timer" id="recTimer"></div>
+          <button class="rec-btn" id="recBtn" onclick="toggleRec()">🎤</button>
+          <div class="rec-status" id="recStatus">Tap to start recording</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:1.25rem;">Aim for 1–3 minutes. Works best in Chrome or Edge.</p>
+        </div>
+        <textarea id="transcriptBox" placeholder="Your words appear here as you speak. You can also type or paste directly."></textarea>
+        <button class="btn-analyse" id="analyseBtn" onclick="analyse()" disabled>✦ Analyse my speech</button>
+      </div>
+
+      <div id="resultsArea" style="display:none">
+        <div class="stats-row" id="statsRow"></div>
+        <div class="card">
+          <div class="card-title">🖍 Transcript — filler words highlighted</div>
+          <div class="transcript-display" id="transcriptDisplay"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">💬 Your coaching feedback</div>
+          <div id="feedbackArea"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMMUNITY PAGE -->
+    <div class="page" id="pageCommunity">
+      <p class="section-label">What everyone's working on</p>
+      <div id="communityFeed">
+        <div class="empty-state">
+          <div class="loading-dots" style="justify-content:center">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div class="page" id="pageHistory">
+      <p class="section-label">Your past sessions</p>
+      <div id="historyFeed">
+        <div class="empty-state">
+          <div class="loading-dots" style="justify-content:center">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIGURATION — fill these in after Supabase setup
+// ══════════════════════════════════════════
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const ANTHROPIC_KEY = 'YOUR_ANTHROPIC_API_KEY';
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ══════════════════════════════════════════
+// TOPICS
+// ══════════════════════════════════════════
+const TOPICS = [
+  { text: "A moment that changed how you see the world", hint: "Describe where you were, what happened, and what shifted for you." },
+  { text: "The best advice you've ever received", hint: "Who gave it? What were the circumstances? How did you apply it?" },
+  { text: "A time you failed and what you learned", hint: "Be honest — vulnerability is what makes stories memorable." },
+  { text: "Describe your hometown to someone who's never been there", hint: "Use sensory details — sounds, smells, textures." },
+  { text: "A skill you've worked hard to develop", hint: "The beginning, the struggle, the breakthrough." },
+  { text: "The most interesting person you've ever met", hint: "Tell a specific story about them, not just a description." },
+  { text: "A habit or ritual that shapes your day", hint: "Why does it matter? What would change if you stopped?" },
+  { text: "A technology that excites or concerns you", hint: "Give your personal take with a real example." },
+  { text: "Your earliest childhood memory", hint: "Start with a scene — as much sensory detail as you can recall." },
+  { text: "Something you believe that most people disagree with", hint: "Make your argument clearly and use evidence or stories to back it up." },
+  { text: "A book, film, or show that had an unexpected impact on you", hint: "Don't summarise the plot — talk about why it hit you personally." },
+  { text: "A challenge your community or city faces", hint: "Name the issue, explain the impact with a human example." },
+];
+
+const FILLERS = ["um","uh","er","ah","like","you know","sort of","kind of","basically","literally","actually","right","okay","so","anyway","i mean","well","just","very","really","stuff","things","whatever","yeah","totally","honestly","seriously","obviously","clearly"];
+
+let currentTopic = null;
+let recognition = null;
+let isRecording = false;
+let elapsed = 0;
+let timerInterval = null;
+let currentUser = null;
+
+// ══════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════
+function switchTab(tab) {
+  document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('signupForm').style.display = tab === 'signup' ? 'block' : 'none';
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (tab==='login'&&i===0)||(tab==='signup'&&i===1)));
+  document.getElementById('authError').textContent = '';
+}
+
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPassword').value;
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) { document.getElementById('authError').textContent = error.message; return; }
+}
+
+async function signup() {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const pass = document.getElementById('signupPassword').value;
+  if (!name) { document.getElementById('authError').textContent = 'Please enter your name.'; return; }
+  const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
+  if (error) { document.getElementById('authError').textContent = error.message; return; }
+  document.getElementById('authError').style.color = 'green';
+  document.getElementById('authError').textContent = 'Check your email to confirm your account!';
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  document.getElementById('appScreen').style.display = 'none';
+  document.getElementById('authScreen').style.display = 'flex';
+}
+
+sb.auth.onAuthStateChange((event, session) => {
+  if (session) {
+    currentUser = session.user;
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    loadTopic();
+  }
+});
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+  document.getElementById('nav' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+  if (name === 'community') loadCommunity();
+  if (name === 'history') loadHistory();
+}
+
+// ══════════════════════════════════════════
+// TOPICS
+// ══════════════════════════════════════════
+function loadTopic() {
+  const idx = Math.floor((Date.now() / 86400000)) % TOPICS.length;
+  currentTopic = TOPICS[idx];
+  renderTopic();
+}
+
+function newTopic() {
+  const cur = TOPICS.indexOf(currentTopic);
+  currentTopic = TOPICS[(cur + 1) % TOPICS.length];
+  renderTopic();
+}
+
+function renderTopic() {
+  document.getElementById('topicText').textContent = currentTopic.text;
+  document.getElementById('topicHint').textContent = currentTopic.hint;
+}
+
+// ══════════════════════════════════════════
+// RECORDING
+// ══════════════════════════════════════════
+function setupRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    const n = document.getElementById('micNotice');
+    n.textContent = 'Live transcription not supported in this browser. Try Chrome or Edge — or type your speech directly.';
+    n.style.display = 'block';
+    return false;
+  }
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  let final = '';
+  recognition.onresult = e => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript + ' ';
+      else interim = e.results[i][0].transcript;
+    }
+    document.getElementById('transcriptBox').value = final + interim;
+    checkTranscript();
+  };
+  recognition.onerror = e => {
+    if (e.error === 'not-allowed') {
+      const n = document.getElementById('micNotice');
+      n.textContent = 'Microphone access denied. Please allow microphone permissions and try again.';
+      n.style.display = 'block';
+      stopRec();
+    }
+  };
+  recognition.onend = () => { if (isRecording) recognition.start(); };
+  return true;
+}
+
+function toggleRec() {
+  if (!isRecording) startRec(); else stopRec();
+}
+
+function startRec() {
+  if (!recognition && !setupRecognition()) return;
+  if (recognition) recognition.start();
+  isRecording = true;
+  document.getElementById('recBtn').classList.add('recording');
+  document.getElementById('recBtn').textContent = '⏹';
+  document.getElementById('recStatus').textContent = 'Recording... tap to stop';
+  elapsed = 0;
+  document.getElementById('recTimer').textContent = '0:00';
+  timerInterval = setInterval(() => {
+    elapsed++;
+    const m = Math.floor(elapsed / 60), s = elapsed % 60;
+    document.getElementById('recTimer').textContent = m + ':' + String(s).padStart(2,'0');
+  }, 1000);
+}
+
+function stopRec() {
+  isRecording = false;
+  if (recognition) { try { recognition.stop(); } catch(e){} }
+  clearInterval(timerInterval);
+  document.getElementById('recBtn').classList.remove('recording');
+  document.getElementById('recBtn').textContent = '🎤';
+  document.getElementById('recStatus').textContent = 'Recording stopped — tap to record again';
+  checkTranscript();
+}
+
+function checkTranscript() {
+  document.getElementById('analyseBtn').disabled = document.getElementById('transcriptBox').value.trim().length < 10;
+}
+
+document.getElementById('transcriptBox').addEventListener('input', checkTranscript);
+
+// ══════════════════════════════════════════
+// ANALYSIS
+// ══════════════════════════════════════════
+function highlightFillers(text) {
+  const pattern = new RegExp('\\b(' + FILLERS.map(w => w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')\\b', 'gi');
+  return text.replace(pattern, '<span class="filler">$1</span>');
+}
+
+function countFillers(text) {
+  const pattern = new RegExp('\\b(' + FILLERS.map(w => w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')\\b', 'gi');
+  return (text.match(pattern) || []).length;
+}
+
+function wordCount(text) {
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+async function analyse() {
+  const transcript = document.getElementById('transcriptBox').value.trim();
+  if (!transcript) return;
+
+  document.getElementById('analyseBtn').disabled = true;
+  document.getElementById('analyseBtn').innerHTML = '<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
+
+  const fc = countFillers(transcript);
+  const wc = wordCount(transcript);
+  const wpm = elapsed > 0 ? Math.round((wc / elapsed) * 60) : '—';
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-box"><span class="stat-num">${wc}</span><span class="stat-lbl">words</span></div>
+    <div class="stat-box"><span class="stat-num">${fc}</span><span class="stat-lbl">filler words</span></div>
+    <div class="stat-box"><span class="stat-num">${wpm}</span><span class="stat-lbl">words/min</span></div>
+  `;
+
+  document.getElementById('transcriptDisplay').innerHTML = highlightFillers(transcript);
+  document.getElementById('resultsArea').style.display = 'block';
+  document.getElementById('feedbackArea').innerHTML = '<div style="text-align:center;padding:2rem 0"><div class="loading-dots" style="justify-content:center"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div><p style="margin-top:10px;font-size:13px;color:var(--muted)">Getting your feedback...</p></div>';
+  document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  let result = null;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `You are a friendly speech and storytelling coach. Analyse this speech transcript. Topic: "${currentTopic.text}". Filler words found: ${fc} of ${wc} total words.\n\nTranscript:\n"""\n${transcript}\n"""\n\nRespond in JSON only — no markdown, no backticks. Use this exact structure:\n{"overallScore":7,"summary":"2 sentence encouraging summary","feedback":[{"type":"good","text":"strength"},{"type":"good","text":"strength"},{"type":"warn","text":"improvement with specific advice"},{"type":"warn","text":"improvement with specific advice"},{"type":"tip","text":"one concrete technique to try next time"}]}`
+        }]
+      })
+    });
+    const data = await resp.json();
+    const raw = data.content.map(b => b.text || '').join('').replace(/```json|```/g,'').trim();
+    result = JSON.parse(raw);
+  } catch(e) {
+    document.getElementById('feedbackArea').innerHTML = '<p style="color:#c0392b;font-size:14px">Could not get feedback. Check your API key in the config and try again.</p>';
+    document.getElementById('analyseBtn').disabled = false;
+    document.getElementById('analyseBtn').innerHTML = '✦ Analyse again';
+    return;
+  }
+
+  const iconMap = { good: { emoji: '✓', cls: 'good' }, warn: { emoji: '!', cls: 'warn' }, tip: { emoji: '💡', cls: 'tip' } };
+  let html = `<div class="score-badge">Score: ${result.overallScore}/10</div>`;
+  html += `<p style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:4px;">${result.summary}</p>`;
+  for (const item of result.feedback) {
+    const ic = iconMap[item.type];
+    html += `<div class="feedback-item"><div class="feedback-icon ${ic.cls}">${ic.emoji}</div><span>${item.text}</span></div>`;
+  }
+  document.getElementById('feedbackArea').innerHTML = html;
+
+  // Save to Supabase
+  if (currentUser) {
+    try {
+      await sb.from('sessions').insert({
+        user_id: currentUser.id,
+        topic: currentTopic.text,
+        transcript,
+        filler_count: fc,
+        word_count: wc,
+        score: result.overallScore,
+        summary: result.summary,
+        created_at: new Date().toISOString()
+      });
+    } catch(e) { console.log('Save error:', e); }
+  }
+
+  document.getElementById('analyseBtn').disabled = false;
+  document.getElementById('analyseBtn').innerHTML = '✦ Analyse again';
+}
+
+// ══════════════════════════════════════════
+// COMMUNITY FEED
+// ══════════════════════════════════════════
+async function loadCommunity() {
+  document.getElementById('communityFeed').innerHTML = '<div class="empty-state"><div class="loading-dots" style="justify-content:center"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
+  try {
+    const { data, error } = await sb.from('sessions').select('*, profiles(full_name)').order('created_at', { ascending: false }).limit(20);
+    if (error || !data || data.length === 0) {
+      document.getElementById('communityFeed').innerHTML = '<div class="empty-state"><div class="big">🎤</div><p>No entries yet — be the first to practise today!</p></div>';
+      return;
+    }
+    document.getElementById('communityFeed').innerHTML = data.map(s => {
+      const name = s.profiles?.full_name || 'Anonymous';
+      const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+      const date = new Date(s.created_at).toLocaleDateString('en-AU', { day:'numeric', month:'short' });
+      return `<div class="feed-item">
+        <div class="feed-meta">
+          <div class="feed-user">
+            <div class="avatar">${initials}</div>
+            <div><div class="feed-name">${name}</div><div class="feed-date">${date}</div></div>
+          </div>
+          <div class="feed-score">${s.score}/10</div>
+        </div>
+        <div class="feed-topic">${s.topic}</div>
+        <div class="feed-transcript">${s.transcript}</div>
+        ${s.summary ? `<div class="feed-summary">${s.summary}</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('communityFeed').innerHTML = '<div class="empty-state"><p>Could not load community feed.</p></div>';
+  }
+}
+
+// ══════════════════════════════════════════
+// HISTORY
+// ══════════════════════════════════════════
+async function loadHistory() {
+  document.getElementById('historyFeed').innerHTML = '<div class="empty-state"><div class="loading-dots" style="justify-content:center"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
+  try {
+    const { data, error } = await sb.from('sessions').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false });
+    if (error || !data || data.length === 0) {
+      document.getElementById('historyFeed').innerHTML = '<div class="empty-state"><div class="big">📖</div><p>No sessions yet — complete your first practice to see your history here.</p></div>';
+      return;
+    }
+    document.getElementById('historyFeed').innerHTML = data.map(s => {
+      const date = new Date(s.created_at).toLocaleDateString('en-AU', { weekday:'short', day:'numeric', month:'short' });
+      return `<div class="feed-item">
+        <div class="feed-meta">
+          <div><div class="feed-name">${date}</div><div class="feed-date">${s.word_count} words · ${s.filler_count} fillers</div></div>
+          <div class="feed-score">${s.score}/10</div>
+        </div>
+        <div class="feed-topic">${s.topic}</div>
+        <div class="feed-transcript">${s.transcript}</div>
+        ${s.summary ? `<div class="feed-summary">${s.summary}</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('historyFeed').innerHTML = '<div class="empty-state"><p>Could not load history.</p></div>';
+  }
+}
+</script>
+</body>
+</html>
